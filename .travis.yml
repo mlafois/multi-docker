@@ -1,0 +1,22 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t mlafois/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true mlafois/react-test npm test --
+
+after_success:
+  - docker build -t mlafois/multi-client ./client
+  - docker build -t mlafois/multi-nginx ./nginx
+  - docker build -t mlafois/multi-server ./server
+  - docker build -t mlafois/multi-worker ./worker
+  # Docker hub
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push mlafois/multi-client
+  - docker push mlafois/multi-nginx
+  - docker push mlafois/multi-server
+  - docker push mlafois/multi-worker
